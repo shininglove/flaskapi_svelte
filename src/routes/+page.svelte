@@ -1,39 +1,31 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { z } from "zod";
-    import { createZodFetcher } from "zod-fetch";
+    import { createQuery } from "@tanstack/svelte-query";
 
-    const host: string = import.meta.env.VITE_HOST_URL;
+    import { z } from "zod";
+
+    import {createZodFetcher} from "zod-fetch";
 
     const fetchWithZod = createZodFetcher();
 
-    export let info: Promise<string> | null;
+    const host: string = import.meta.env.VITE_HOST_URL;
 
-    onMount(async () => {
-        info = dataFetcher();
+    const data = z.object({ hello: z.string() });
+
+    const info = createQuery<z.infer<typeof data>, Error>({
+        queryKey: ["info"],
+        queryFn: async () => await fetchWithZod(data,`${host}/data`),
     });
-
-    async function dataFetcher() {
-        const res = await fetchWithZod(
-            z.object({ hello: z.string() }),
-            `${host}/data`
-        );
-        console.log(res);
-        return res.hello;
-    }
 
 </script>
 
 <section>
-    <div>About</div>
+    <div>Home</div>
     <div>Element goes zzzooommm!</div>
-    {#await info}
+    {#if $info.isLoading}
         <p>loading...</p>
-    {:then myInfo}
-        {#if myInfo}
-            <p>The info is: {myInfo}</p>
-        {/if}
-    {:catch error}
-        <p style="color: red;">{error.message}</p>
-    {/await}
+    {:else if $info.isSuccess}
+        <p>The info is: {$info.data.hello}</p>
+    {:else if $info.error}
+        <p style="color: red;">{$info.error.message}</p>
+    {/if}
 </section>

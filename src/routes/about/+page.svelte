@@ -1,5 +1,4 @@
 <script lang="ts">
-    // Query
 </script>
 
 <h1>Welcome to SvelteKit</h1>
